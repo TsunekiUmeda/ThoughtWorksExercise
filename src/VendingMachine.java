@@ -1,62 +1,104 @@
 public class VendingMachine {
 
-    int quantityOfCoke = 5; // コーラの在庫数
-    int quantityOfDietCoke = 5; // ダイエットコーラの在庫数
-    int quantityOfTea = 5; // お茶の在庫数
+    Inventory drinks;
+    State state;
+    State soldState;
+    State nochangeState;
+    State readyState;
+    State noCashState;
+
     int numberOf100Yen = 10; // 100円玉の在庫
-    int charge = 0; // お釣り
+    int charge = 0;
 
-    /**
-     * ジュースを購入する.
-     *
-     * @param i           投入金額. 100円と500円のみ受け付ける.
-     * @param kindOfDrink ジュースの種類.
-     *                    コーラ({@code Juice.COKE}),ダイエットコーラ({@code Juice.DIET_COKE},お茶({@code Juice.TEA})が指定できる.
-     * @return 指定したジュース. 在庫不足や釣り銭不足で買えなかった場合は {@code null} が返される.
-     */
-    public Drink buy(int i, int kindOfDrink) {
-        // 100円と500円だけ受け付ける
-        if ((i != 100) && (i != 500)) {
-            charge += i;
-            return null;
-        }
+    public VendingMachine() {
 
-        if ((kindOfDrink == Drink.COKE) && (quantityOfCoke == 0)) {
-            charge += i;
-            return null;
-        } else if ((kindOfDrink == Drink.DIET_COKE) && (quantityOfDietCoke == 0)) {
-            charge += i;
-            return null;
-        } else if ((kindOfDrink == Drink.TEA) && (quantityOfTea == 0)) {
-            charge += i;
-            return null;
-        }
-
-        // 釣り銭不足
-        if (i == 500 && numberOf100Yen < 4) {
-            charge += i;
-            return null;
-        }
-
-        if (i == 100) {
-            // 100円玉を釣り銭に使える
-            numberOf100Yen++;
-        } else if (i == 500) {
-            // 400円のお釣り
-            charge += (i - 100);
-            // 100円玉を釣り銭に使える
-            numberOf100Yen -= (i - 100) / 100;
-        }
-
-        if (kindOfDrink == Drink.COKE) {
-            quantityOfCoke--;
-        } else if (kindOfDrink == Drink.DIET_COKE) {
-            quantityOfDietCoke--;
+        drinks = new Inventory();
+        drinks.setInventory(Drink.COKE, 5);
+        drinks.setInventory(Drink.DIET_COKE, 5);
+        drinks.setInventory(Drink.TEA, 5);
+        soldState = new SoldState(this);
+        nochangeState = new NoChangeState(this);
+        readyState = new ReadyState(this);
+        if (numberOf100Yen < 5) {
+            state = nochangeState;
         } else {
-            quantityOfTea--;
+            state = readyState;
         }
 
-        return new Drink(kindOfDrink);
+
+    }
+
+    public void insertCoin(Coin coin) {
+        if (isValidCoin(coin)) {
+            state.insertCoin(coin);
+        }
+    }
+
+    public boolean isValidCoin(Coin coin) {
+        if (coin != Coin.FIVE_HUNDRED && coin != Coin.ONE_HUNDRED) {
+            System.out.println("We only accept 100 and 500 coins");
+            return false;
+        }
+        return true;
+    }
+
+    public void buy(Drink kindOfDrink) {
+        if (!drinks.isInventoryAvailable(kindOfDrink)) {
+            System.out.println("Item is currently not available, please select another item");
+            return;
+        }
+
+        state.buy();
+
+
+//        if (i == 100) {
+//            // 100円玉を釣り銭に使える
+//            numberOf100Yen++;
+//        } else if (i == 500) {
+//            // 400円のお釣り
+//            charge += (i - 100);
+//            // 100円玉を釣り銭に使える
+//            numberOf100Yen -= (i - 100) / 100;
+//        }
+//
+//        return new Drink(kindOfDrink);
+    }
+
+    public void dispense(Drink type) {
+        System.out.println("Dispensing a drink");
+        drinks.deductInventory(type);
+
+    }
+
+    public int getCharge() {
+        return charge;
+    }
+
+    public void addCharge(Coin charge) {
+        if (charge == Coin.FIVE_HUNDRED || charge == Coin.ONE_HUNDRED) {
+            this.charge += charge.getValue();
+        }
+    }
+
+
+    public void setState(State state) {
+        this.state = state;
+    }
+
+    public State getState() {
+        return state;
+    }
+
+    public State getSoldState() {
+        return soldState;
+    }
+
+    public State getNochangeState() {
+        return nochangeState;
+    }
+
+    public State getNoCashState() {
+        return noCashState;
     }
 
     /**

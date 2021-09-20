@@ -1,12 +1,10 @@
-public class Drink {
+ public enum Drink {
+     COKE(0), DIET_COKE(1),TEA(2);
 
-    public static final int COKE = 0;
-    public static final int DIET_COKE = 1;
-    public static final int TEA = 2;
 
     private int kind;
 
-    public Drink(int kind) {
+     Drink(int kind) {
         this.kind = kind;
     }
 
